@@ -1,10 +1,10 @@
-all: main main.stat
+CC = gcc
+CFLAGS = -Wall
+
+all: main
 
 main: main.c
-	cc -Wall -o main main.c
+	$(CC) -o main.o main.c
 
-main.stat: main.c
-	cc -Wall -static -o main.stat main.c
-	
 clean:
-	rm -f main main.stat main.asm main.prec
+	rm -f *.o
