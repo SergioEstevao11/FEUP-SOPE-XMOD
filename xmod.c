@@ -63,15 +63,12 @@ int main(int argc, char* argv[], char* envp[]){
     struct stat ret;
     if(stat(argv[2], &ret) < 0)return 1;
     mode_t bits = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-
-    // mode_t bits = (ret.st_mode & S_IRUSR)|(ret.st_mode & S_IWUSR)|(ret.st_mode & S_IXUSR)|/*owner*/
-    //     (ret.st_mode & S_IRGRP)|(ret.st_mode & S_IWGRP)|(ret.st_mode & S_IXGRP)|/*group*/
-    //     (ret.st_mode & S_IROTH)|(ret.st_mode & S_IWOTH)|(ret.st_mode & S_IXOTH);
+    
     
 
 
 
-    printf("%d\n", bits);
+    printf("%o\n", bits);
 
     // mode_t mode = strtol(argv[1], NULL, 8);
     // if (chmod(argv[2], mode) != 0){
