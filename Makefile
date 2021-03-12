@@ -3,8 +3,8 @@ CFLAGS = -Wall
 
 all: xmod
 
-main: xmod.c
-	$(CC) -o xmod.o xmod.c
+xmod: xmod.c
+	$(CC) -o xmod xmod.c
 
 clean:
-	rm -f *.o
+	rm -f xmod
