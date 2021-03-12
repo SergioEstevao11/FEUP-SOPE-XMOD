@@ -11,10 +11,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 
-int main(int argc, char* argv[], char* envp[]){
 
-    printf("Hello World :3\n");
-    return;
-}
+//s = directory; indent = 0
+int ViewDirectoryRecursive(char s[], int indent);
 
+int xmod(int argc, char* argv[], char* envp[]);
 
