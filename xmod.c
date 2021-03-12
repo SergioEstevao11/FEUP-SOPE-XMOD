@@ -59,15 +59,18 @@ int xmod(int argc, char* argv[], char* envp[]){
 
 
 int main(int argc, char* argv[], char* envp[]){
-    mode_t mode = 0777;
-    umask(mode);
-    int Fid;
-    if ( (Fid = open(argv[2], O_RDWR)) != 0){
-        return 1;
+    mode_t mode = strtol(argv[1], NULL, 8);
+    if (chmod(argv[2], mode) != 0){
+        fprintf(stderr, "Error in chmod\n");
     }
-    //./xmod 0777 ficheiro
-    close(Fid);
 
-    printf("Hello World :3\n");
+    //int Fid;
+    // if ( (Fid = open(argv[2], O_RDWR)) != 0){
+    //     return 1;
+    // }
+    // //./xmod 0777 ficheiro
+    // close(Fid);
+
+    //printf("Hello World :3\n");
     return 0;
 }
