@@ -17,7 +17,7 @@ int ViewDirectoryRecursive(char s[], int indent){
             printf("%*s[%s]\n", indent, "", sd->d_name);
             int id = fork();
             if(id == 0){
-                ViewDirectory(path, indent+2);
+                ViewDirectoryRecursive(path, indent+2);
                 return 0;
             }
             else{
@@ -34,9 +34,40 @@ int ViewDirectoryRecursive(char s[], int indent){
 }
 
 int xmod(int argc, char* argv[], char* envp[]){
-    if(argv[1] == "-v"){
-        //tratar v
-    }
-    else if(argv[1] == "-c")
 
+    if(argc < MIN_ARGS || argc > MAX_ARGS){
+        fprintf(stderr,"Incorrect number of arguments\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    if(strcmp(argv[1] , "-v")){
+        
+    }   
+    else if(strcmp(argv[1], "-c")) {
+
+    }
+    else if(strcmp(argv[1], "-R")) {
+
+    }
+
+
+    exit(EXIT_SUCCESS);
+
+}
+
+
+
+int main(int argc, char* argv[], char* envp[]){
+    mode_t mode = 0777;
+    umask(mode);
+    int Fid;
+    if ( (Fid = open(argv[2], O_RDWR)) != 0){
+        return 1;
+    }
+    //./xmod 0777 ficheiro
+    close(Fid);
+
+    printf("Hello World :3\n");
+    return 0;
 }

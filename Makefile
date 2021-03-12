@@ -1,10 +1,10 @@
 CC = gcc
 CFLAGS = -Wall
 
-all: main
+all: xmod
 
-main: main.c
-	$(CC) -o main.o main.c
+main: xmod.c
+	$(CC) -o xmod.o xmod.c
 
 clean:
 	rm -f *.o

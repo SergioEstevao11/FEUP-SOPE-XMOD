@@ -4,12 +4,15 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <dirent.h>
+
+
+#define MAX_ARGS 6
+#define MIN_ARGS 3
 
 
 //s = directory; indent = 0
