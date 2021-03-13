@@ -58,22 +58,102 @@ int xmod(int argc, char* argv[], char* envp[]){
 }
 
 
+int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
+    mode_t newMask = 0x0;
+    
+    for (size_t perm = 2; perm < strlen(mode); perm++){       
+        printf("Loop print: %c\n", mode[perm]);
+        switch(mode[perm]){
+            case 'r':
+                newMask |= R_BIT;
+                break;
+
+            case 'w':   
+                newMask |= W_BIT;
+                break;
+
+            case 'x':
+                newMask |= X_BIT;
+                break;
+
+            default:
+                perror("Invalid Permissions.\n");
+                return 1;
+        }
+    }
+    
+    printf("Print 0: %o\n", newMask); 
+    mode_t copyMask = newMask;
+
+    switch(mode[0]){
+        case 'u':
+            newMask = newMask << 6;
+            break;
+        case 'g':
+            newMask = newMask << 3; // newMask = 0x011000
+            break;
+        case 'o':
+            break;
+        case 'a':
+            newMask = (copyMask << 6) | (copyMask << 3) | copyMask;
+            break;
+        default:
+            perror("Invalid User.\n");
+            return 1;
+    }
+
+    printf("Print 1: %o\n", newMask); 
+
+    switch(mode[1]){
+        case '+':
+            newMask |= oldMask;
+            break;
+        case '-': 
+            newMask = ((~newMask) & oldMask); // 0x111100111 & 0x111111111 -> 0x111100111
+            break;
+        case '=':
+            switch (mode[0]) {
+                case 'u':
+                    newMask = ((oldMask & USER_MASK) | newMask);
+                    break;
+                case 'g':
+                    newMask = ((oldMask & GROUP_MASK) | newMask);
+                    break;
+                case 'o':
+                    newMask = ((oldMask & OTHERS_MASK ) | newMask);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            perror("Invalid Operator.\n");
+            return 1;
+    }
+
+    printf("Print 2: %o\n", newMask);
+    *mask = newMask;
+
+    return 0;
+}
+
 
 int main(int argc, char* argv[], char* envp[]){
+
     struct stat ret;
-    if(stat(argv[2], &ret) < 0)return 1;
+    if(stat(argv[2], &ret) < 0) return 1;
     mode_t bits = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+
+    mode_t mask;
+    if(toOctalMode(bits, argv[1], &mask) != 0) exit(EXIT_FAILURE);
+
+
     
-    
 
-
-
-    printf("%o\n", bits);
-
-    // mode_t mode = strtol(argv[1], NULL, 8);
-    // if (chmod(argv[2], mode) != 0){
-    //     fprintf(stderr, "Error in chmod\n");
-    // }
+    //mode_t mode = strtol(argv[1], NULL, 8);
+    if (chmod(argv[2], mask) != 0){
+        fprintf(stderr, "Error in chmod\n");
+    }
 
     return 0;
 }
