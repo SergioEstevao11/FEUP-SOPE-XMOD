@@ -94,8 +94,6 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
         
         snprintf(path, sizeof(path), "%s/%s", s, sd->d_name);
 
-        printf("%s\n", path);
-
         if (stat(path, &ret) < 0) return 1;
         mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
         
