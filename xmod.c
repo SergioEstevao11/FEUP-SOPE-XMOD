@@ -78,6 +78,7 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
 
 
 int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
+    
     DIR *dir;
     struct dirent *sd;
     char path[1024];
@@ -88,20 +89,29 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
     }
 
     while ( (sd=readdir(dir)) != NULL ){
+        printf("%s\n", sd->d_name);
         struct stat ret;
         mode_t mask;
         char path[1024];
+
+        if (strcmp(sd->d_name, ".") == 0 || strcmp(sd->d_name, "..") == 0){
+                continue;
+        }
         
         snprintf(path, sizeof(path), "%s/%s", s, sd->d_name);
+        printf("%s\n", path);
 
-        if (stat(path, &ret) < 0) return 1;
+        if (stat(path, &ret) == -1) return 1;
         mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-        
-        if (isOctal) 
-            if (toOctalMode(oldMode, newMode, &mask) != 0) exit(EXIT_FAILURE);    
+		printf("%o\n", oldMode);
+
+		if (isOctal == 1) {
+            if (toOctalMode(oldMode, newMode, &mask) != 0) exit(EXIT_FAILURE);   
+        } 
                   
         else mask = strtol(newMode, NULL, 8);
 
+        printf("%o\n", mask);
         if (chmod(path, mask) != 0) fprintf(stderr, "Error in chmod\n");
         
         switch(option){
@@ -122,18 +132,14 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
         
         if (sd->d_type == DT_DIR){ 
 
-            if (strcmp(sd->d_name, ".") == 0 || strcmp(sd->d_name, "..") == 0){
-                continue;
+            int id = fork();
+        
+            if (id == 0){
+                ViewDirectoryRecursive(path, newMode, isOctal, option);
+                return 0;
             }
-            else{
-                int id = fork();
+            else wait(NULL);
             
-                if (id == 0){
-                    ViewDirectoryRecursive(path, newMode, isOctal, option);
-                    return 0;
-                }
-                else wait(NULL);
-            }
         }
         
         // else if(sd->d_type == DT_REG){
