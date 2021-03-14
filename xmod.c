@@ -1,15 +1,61 @@
 #include "xmod.h"
 
+int processRegister(struct eventsInfo eevee, int fileID) { //:3
+    const int MAX_BUF = 1024;
+    char *message = malloc(MAX_BUF);
+    int messageSize = 0;
+    
+    messageSize += snprintf(message, MAX_BUF, "%d ; ", eevee.instant);
+    messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d ; ", eevee.pid);
+    
+    switch(eevee.event){
+        case PROC_CREAT:
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "PROC_CREAT ; ");
+            for(int c = 0; c < eevee.NumArgs; c++){
+                messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s ", eevee.arg[c]);
+            }
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "\n");
+            
+            break;
+        
+        case PROC_EXIT:
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "PROC_EXIT ; ");
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d\n", eevee.exitStatus);
+            break;
+
+        case SIGNAL_RECV:
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_RECV ; ");
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d ; ", eevee.instant);
+            break;
+            
+        case SIGNAL_SENT:
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_SENT ; ");
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d ; ", eevee.instant);
+            break;
+
+        case FILE_MODF:
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "FILE_MODF ; ");
+            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d ; ", eevee.instant);
+            break;
+            
+        default:
+            break;
+    }
+    
+    free(message);
+    return 0;
+}
+
+
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
     mode_t newMask = 0x0;
-    
-    for (size_t perm = 2; perm < strlen(mode); perm++){       
-        switch(mode[perm]){
+
+    for (size_t perm = 2; perm < strlen(mode); perm++) {
+        switch(mode[perm]) {
             case 'r':
                 newMask |= R_BIT;
                 break;
-
             case 'w':   
                 newMask |= W_BIT;
                 break;
@@ -19,7 +65,7 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
                 break;
 
             default:
-                perror("Invalid Permissions.\n");
+                perror("Invalid Permissions");
                 return 1;
         }
     }
@@ -39,7 +85,7 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
             newMask = (copyMask << 6) | (copyMask << 3) | copyMask;
             break;
         default:
-            perror("Invalid User.\n");
+            perror("Invalid User");
             return 1;
     }
 
@@ -67,7 +113,7 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
             }
             break;
         default:
-            perror("Invalid Operator.\n");
+            perror("Invalid Operator");
             return 1;
     }
 
@@ -113,16 +159,17 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
 
         printf("%o\n", mask);
         if (chmod(path, mask) != 0) fprintf(stderr, "Error in chmod\n");
+        // chamar aqui pq permissões mudaram :3
         
-        switch(option){
-            case V_OPTION: //option v
+        switch(option) {
+            case V_OPTION:
                 if (oldMode == mask) printf("mode of '%s/%s' retained as %o \n", s, sd->d_name, mask); //falta dar print do mode em "rwx"
                 
                 else printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
 
                 break;
 
-            case C_OPTION:// option c
+            case C_OPTION:
                 if (oldMode != mask) printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
                 break;
             
@@ -133,25 +180,22 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
         if (sd->d_type == DT_DIR){ 
 
             int id = fork();
-        
+            // chamar aqui pq processo começou :3
             if (id == 0){
                 ViewDirectoryRecursive(path, newMode, isOctal, option);
                 return 0;
             }
             else wait(NULL);
-            
+            // chamar aqui pq processo acabou =(
         }
         
-        // else if(sd->d_type == DT_REG){
-    
-        // }
     }
     
     closedir(dir);
     return 0;
 }
 
-int xmod(int argc, char* argv[], char* envp[]) {
+int xmod(int argc, char* argv[], int fileID) {
 
     int option = NO_OPTION;
     mode_t oldMode;
@@ -159,7 +203,7 @@ int xmod(int argc, char* argv[], char* envp[]) {
     int counter = 1;
     int isOctal = 0;
     struct stat ret;
-    
+
 
     if (argc < MIN_ARGS || argc > MAX_ARGS) {
         fprintf(stderr,"Incorrect number of arguments\n");
@@ -170,8 +214,10 @@ int xmod(int argc, char* argv[], char* envp[]) {
     for (;;counter++) {
         
         if ((mask = strtol(argv[counter], NULL, 8)) != 0) {
+            
+            if (argv[counter][0] != '0') return 1;
 
-            if (stat(argv[counter+1], &ret) < 0) return 1;
+            if (stat(argv[counter+1], &ret) < 0) return 1; // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             break;
@@ -180,7 +226,7 @@ int xmod(int argc, char* argv[], char* envp[]) {
         else if ( argv[counter][0] == 'u' || argv[counter][0] == 'g' || argv[counter][0] == 'o' || argv[counter][0] == 'a'){
             isOctal = 1;
 
-            if (stat(argv[counter+1], &ret) < 0) return 1;
+            if (stat(argv[counter+1], &ret) < 0) return 1; // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             if (toOctalMode(oldMode, argv[counter], &mask) != 0) exit(EXIT_FAILURE);
@@ -210,22 +256,23 @@ int xmod(int argc, char* argv[], char* envp[]) {
     counter++;
 
     
-    if (chmod(argv[counter], mask) != 0){
+    if (chmod(argv[counter], mask) != 0) {
         fprintf(stderr, "Error in chmod\n");
         exit(EXIT_FAILURE);
     }
+    else ; // chamar aqui pq permissoes mudaram :3
 
     int copy_option = option >> 1; 
 
     switch(copy_option){
-            case V_OPTION: //option v
+            case V_OPTION:
                 if (oldMode == mask) printf("mode of '%s' retained as %o \n", argv[counter], mask); //falta dar print do mode em "rwx"
                 
                 else printf("mode of '%s' changed from %o to %o\n", argv[counter], oldMode, mask);
 
                 break;
 
-            case C_OPTION:// option c
+            case C_OPTION:
                 if (oldMode != mask) printf("mode of '%s' changed from %o to %o\n", argv[counter], oldMode, mask); //falta dar print do mode em "rwx"
                 break;
             
@@ -242,6 +289,44 @@ int xmod(int argc, char* argv[], char* envp[]) {
 
  
 int main(int argc, char* argv[], char* envp[]){
-    xmod(argc, argv, envp);
+    //proc_create
+    // int fid;
+    // char* token;
+    // char* filename = NULL;
+    // FILE *file;
+    
+    // for (int i = 0; envp[i] != NULL; i++) { 
+    //     token = strtok(envp[i], "=");
+    //     if (strcmp(token,"LOG_FILENAME") == 0){
+    //         filename = strtok(NULL, "=");
+    //         printf("%s\n", filename);
+    //         if ((fid = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) == -1) {
+    //             perror("Unable to open/create file");
+    //             exit(EXIT_FAILURE);
+    //         }
+    //         break;
+    //     }
+    // }
+
+    // xmod(argc, argv, fid);
+
+    // if(close(fid) == -1){
+    //     perror("Unable to close file");
+    //     exit(EXIT_FAILURE);
+    // };
+
+    int sig = 2;
+
+    //char *str = strdup(sys_siglist[sig]);
+    char *str = strsignal(sig);
+
+    //char *signame[]={"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL", "SIGPWR", "SIGSYS", NULL};
+    // while (*str)
+    // {
+    //     *str = toupper(*str);
+    //     str++;
+    // }
+
+    printf("%2d -> SIG%s\n", sig, str);
     return 0;
 }
