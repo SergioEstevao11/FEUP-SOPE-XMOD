@@ -37,6 +37,7 @@ int processRegister(enum events event) { // :3
     if(eevee.hasFile == 0){
         return 0;
     }
+    eevee.file = fopen(getenv("LOG_FILENAME"), "a");
     const int MAX_BUF = 1024;
     char *message = malloc(MAX_BUF);
     int messageSize = 0;
@@ -86,6 +87,7 @@ int processRegister(enum events event) { // :3
     fprintf(eevee.file,"%s",message);
     
 	free(message);
+    fclose(eevee.file);
     return 0;
 }
 
@@ -121,9 +123,7 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             int id = fork();
             // chamar aqui pq processo começou :3
             
-            if (id == 0){
-                //fclose(eevee.file);
-                //fflush(eevee.file);
+            if (id == 0) {
                 eevee.arg[eevee.NumArgs-1] = path;
                 for(int c = 0; c < eevee.NumArgs; c++){
                     printf("-> %s \n", eevee.arg[c]);
@@ -293,17 +293,19 @@ int main(int argc, char* argv[], char* envp[]){
     eevee.arg = argv;
     eevee.NumArgs = argc;
 
-    if ((filename = getenv("LOG_FILENAME"))!= NULL) {
-        if ((eevee.file = fopen(filename,"w") )== NULL) {
-            perror("Unable to open/create file");
-            eevee.exitStatus = EXIT_FAILURE;
-            processRegister(PROC_EXIT);
-            exit(EXIT_FAILURE);
-        }
 
+    if ((filename = getenv("LOG_FILENAME"))!= NULL) {
+        if (getpid() != 0) {
+            if ((eevee.file = fopen(filename,"w") )== NULL) {
+                perror("Unable to open/create file");
+                eevee.exitStatus = EXIT_FAILURE;
+                processRegister(PROC_EXIT);
+                exit(EXIT_FAILURE);
+            }
+            fclose(eevee.file);
+        }
         eevee.hasFile = 1;
         eevee.fileChanged = argv[argc-1];
-
     }
 	/*
     struct sigaction sig;
@@ -312,14 +314,12 @@ int main(int argc, char* argv[], char* envp[]){
     //signal(NSIG, sig_handler);
     
     if (xmod(argc, argv) == 1){ 
-        if(eevee.hasFile == 1) fclose(eevee.file);
         exit(EXIT_FAILURE);  
     }
 
     if (eevee.hasFile == 1) {
         eevee.exitStatus = EXIT_SUCCESS;
         processRegister(PROC_EXIT);
-        fclose(eevee.file);
     }
     
     exit(EXIT_SUCCESS);

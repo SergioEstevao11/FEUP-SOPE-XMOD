@@ -9,20 +9,40 @@ double timeElapsed(){
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
     mode_t newMask = 0x0;
+    int rFlag = 0, wFlag = 0, xFlag = 0;
 
     for (size_t perm = 2; perm < strlen(mode); perm++) {
         switch (mode[perm]) {
             case 'r':
-                newMask |= R_BIT;
-                break;
+                if (!rFlag) {
+                    newMask |= R_BIT;
+                    rFlag = 1;
+                    break;
+                } else {
+                    perror("Invalid arguments");
+                    return 1;
+                }
             case 'w':
-                newMask |= W_BIT;
-                break;
-
+                if (!wFlag) {
+                    newMask |= W_BIT;
+                    rFlag = 1;
+                    wFlag = 1;
+                    break;
+                } else {
+                    perror("Invalid arguments");
+                    return 1;
+                }
             case 'x':
-                newMask |= X_BIT;
-                break;
-
+                if (!xFlag) {
+                    newMask |= X_BIT;
+                    rFlag = 1;
+                    wFlag = 1;
+                    xFlag = 1;
+                    break;
+                } else {
+                    perror("Invalid arguments");
+                    return 1;
+                }
             default:
                 perror("Invalid Permissions");
                 return 1;
