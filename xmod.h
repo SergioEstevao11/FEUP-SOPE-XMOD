@@ -16,6 +16,9 @@
 #include <errno.h>
 
 #include "xmod_macros.h"
+#include "xmod_aux.h"
+
+char *signame[] = {"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL", "SIGPWR", "SIGSYS", NULL};
 
 enum events {
     PROC_CREAT,
@@ -26,23 +29,30 @@ enum events {
 };
 
 struct eventsInfo {
-    enum events event;
-    unsigned instant;
-    int pid;
+    FILE* file; 
+    double instant; // Time Elapsed
+    pid_t pid;        // Callee process ID
+    pid_t pidTarget; 
+
     //info of the events
+    //PRO_CREATE
     char ** arg;
     int NumArgs;
-    int exitStatus;
-    int signal;
+	int nftot; // Total files checked 
+	int nfmod; // Files modified
+	int exitStatus;
+	int signal;
     char *fileChanged;
-    mode_t oldPerm;
+    mode_t oldPerm; 
     mode_t newPerm;
 };
 
-int processRegister(struct eventsInfo eevee, int fileID);
+struct eventsInfo eevee;
+
+int processRegister(enum events event);
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t * mask);
 
 int ViewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
 
-int xmod(int argc, char* argv[], int fileID);
+int xmod(int argc, char* argv[]);
