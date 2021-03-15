@@ -5,7 +5,7 @@ void sig_handler(int signal) { // :3
     processRegister(SIGNAL_RECV);
     if (signal == SIGINT) {
         char x;
-        printf("%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nfmod, eevee.nfmod);
+        printf("%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
         printf("Do you want to terminate the program? (y/n) ");
         scanf("%c", &x);
         if (x == 'y') {
@@ -19,11 +19,12 @@ void sig_handler(int signal) { // :3
 }
 
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
+    eevee.nftot++;
     if(chmod(file, newperm) != 0){
         return 1;
     }
-    if (newperm == oldperm){
-        eevee.nftot++;
+    if (newperm != oldperm){
+        eevee.nfmod;
     }
     
     eevee.oldPerm = oldperm;
@@ -33,6 +34,9 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
 }
 
 int processRegister(enum events event) { // :3
+    if(eevee.hasFile == 0){
+        return 0;
+    }
     const int MAX_BUF = 1024;
     char *message = malloc(MAX_BUF);
     int messageSize = 0;
@@ -86,82 +90,6 @@ int processRegister(enum events event) { // :3
 }
 
 
-
-int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
-    mode_t newMask = 0x0;
-
-    for (size_t perm = 2; perm < strlen(mode); perm++) {
-        switch(mode[perm]) {
-            case 'r':
-                newMask |= R_BIT;
-                break;
-            case 'w':   
-                newMask |= W_BIT;
-                break;
-
-            case 'x':
-                newMask |= X_BIT;
-                break;
-
-            default:
-                perror("Invalid Permissions");
-                return 1;
-        }
-    }
-    
-    mode_t copyMask = newMask;
-
-    switch(mode[0]){
-        case 'u':
-            newMask = newMask << 6;
-            break;
-        case 'g':
-            newMask = newMask << 3;
-            break;
-        case 'o':
-            break;
-        case 'a':
-            newMask = (copyMask << 6) | (copyMask << 3) | copyMask;
-            break;
-        default:
-            perror("Invalid User");
-            return 1;
-    }
-
-
-    switch(mode[1]){
-        case '+':
-            newMask |= oldMask;
-            break;
-        case '-': 
-            newMask = ((~newMask) & oldMask);
-            break;
-        case '=':
-            switch (mode[0]) {
-                case 'u':
-                    newMask = ((oldMask & USER_MASK) | newMask);
-                    break;
-                case 'g':
-                    newMask = ((oldMask & GROUP_MASK) | newMask);
-                    break;
-                case 'o':
-                    newMask = ((oldMask & OTHERS_MASK) | newMask);
-                    break;
-                default:
-                    break;
-            }
-            break;
-        default:
-            perror("Invalid Operator");
-            return 1;
-    }
-
-    *mask = newMask;
-
-    return 0;
-}
-
-
 int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
     
     DIR *dir;
@@ -183,62 +111,70 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
                 continue;
         }
 
-        eevee.nftot++;
         
         snprintf(path, sizeof(path), "%s/%s", s, sd->d_name);
+        printf("%s\n", path);
 
         eevee.fileChanged = path;
-
-        //eliminar daqui
-        // obrigado rei da informação por nos abençoares com este comentário util pra caralho :pray:
-
-        if (stat(path, &ret) == -1) return 1;
-        mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-		printf("%o\n", oldMode);
-
-		if (isOctal == 1) {
-            if (toOctalMode(oldMode, newMode, &mask) != 0) exit(EXIT_FAILURE);   
-        } 
-                  
-        else mask = strtol(newMode, NULL, 8);
-
-        if (chmod_handler(path, mask, oldMode) != 0) {
-            return 1;	
-		}
-        
-        
-        // chamar aqui pq permissões mudaram :3
-        
-        switch(option) {
-            case V_OPTION:
-                if (oldMode == mask) printf("mode of '%s/%s' retained as %o \n", s, sd->d_name, mask); //falta dar print do mode em "rwx"
-                
-                else printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
-
-                break;
-
-            case C_OPTION:
-                if (oldMode != mask) printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
-                break;
-            
-            default:
-                break;
-        }
-        
         if (sd->d_type == DT_DIR){ 
 
             int id = fork();
             // chamar aqui pq processo começou :3
+            
             if (id == 0){
-                ViewDirectoryRecursive(path, newMode, isOctal, option);
+                //fclose(eevee.file);
+                //fflush(eevee.file);
+                eevee.arg[eevee.NumArgs-1] = path;
+                for(int c = 0; c < eevee.NumArgs; c++){
+                    printf("-> %s \n", eevee.arg[c]);
+                }
+                execvp("./xmod", eevee.arg);
                 //execvp("./xmod", argumentos da main)
                 return 0;
             }
             else wait(NULL);
-            // chamar aqui pq processo acabou =(
+            // chamar aqui pq processo acabou =( que fica ficou quem foi vai vai vai
+        }
+        else{
+            //eliminar daqui
+            // obrigado rei da informação por nos abençoares com este comentário util pra caralho :pray:
+
+            if (stat(path, &ret) == -1) return 1;
+            mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+            printf("%o\n", oldMode);
+
+            if (isOctal == 1) {
+                if (toOctalMode(oldMode, newMode, &mask) != 0) exit(EXIT_FAILURE);   
+            } 
+                    
+            else mask = strtol(newMode, NULL, 8);
+
+            if (chmod_handler(path, mask, oldMode) != 0) {
+                return 1;	
+            }
+            
+            
+            // chamar aqui pq permissões mudaram :3
+            
+            switch(option) {
+                case V_OPTION:
+                    if (oldMode == mask) printf("mode of '%s/%s' retained as %o \n", s, sd->d_name, mask); //falta dar print do mode em "rwx"
+                    
+                    else printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
+
+                    break;
+
+                case C_OPTION:
+                    if (oldMode != mask) printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
+                    break;
+                
+                default:
+                    break;
+            }
         }
         
     }
+    
     
     closedir(dir);
     return 0;
@@ -319,7 +255,6 @@ int xmod(int argc, char* argv[]) {
 		return 1;
 	}
     
-    eevee.nftot++;
 	// chamar aqui pq permissoes mudaram :3
 
     int copy_option = option >> 1; 
@@ -349,41 +284,43 @@ int xmod(int argc, char* argv[]) {
 
 int main(int argc, char* argv[], char* envp[]){
     begin = clock();
+
     int fid;
     char* token;
     char* filename = NULL;
 
-	eevee.fileChanged = argv[argc-1];
+    eevee.hasFile = 0;
+    eevee.arg = argv;
+    eevee.NumArgs = argc;
+
+    if ((filename = getenv("LOG_FILENAME"))!= NULL) {
+        if ((eevee.file = fopen(filename,"w") )== NULL) {
+            perror("Unable to open/create file");
+            eevee.exitStatus = EXIT_FAILURE;
+            processRegister(PROC_EXIT);
+            exit(EXIT_FAILURE);
+        }
+
+        eevee.hasFile = 1;
+        eevee.fileChanged = argv[argc-1];
+
+    }
 	/*
     struct sigaction sig;
     sig*/
 
     //signal(NSIG, sig_handler);
     
-
-	for (int i = 0; envp[i] != NULL; i++)
-	{
-		token = strtok(envp[i], "=");
-        if (strcmp(token,"LOG_FILENAME") == 0){
-            filename = strtok(NULL, "=");
-            if ((eevee.file = fopen(filename,"w") )== NULL) {
-                perror("Unable to open/create file");
-                eevee.exitStatus = EXIT_FAILURE;
-                processRegister(PROC_EXIT);
-                exit(EXIT_FAILURE);
-            }
-            break;
-        }
-	}
-
-
-    if (xmod(argc, argv) == 1) {
-        fclose(eevee.file);
+    if (xmod(argc, argv) == 1){ 
+        if(eevee.hasFile == 1) fclose(eevee.file);
         exit(EXIT_FAILURE);  
     }
 
-    eevee.exitStatus = EXIT_SUCCESS;
-    processRegister(PROC_EXIT);
-    fclose(eevee.file);
+    if (eevee.hasFile == 1) {
+        eevee.exitStatus = EXIT_SUCCESS;
+        processRegister(PROC_EXIT);
+        fclose(eevee.file);
+    }
+    
     exit(EXIT_SUCCESS);
 }

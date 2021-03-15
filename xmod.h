@@ -15,7 +15,6 @@
 
 #include <errno.h>
 
-#include "xmod_macros.h"
 #include "xmod_aux.h"
 
 char *signame[] = {"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL", "SIGPWR", "SIGSYS", NULL};
@@ -29,6 +28,7 @@ enum events {
 };
 
 struct eventsInfo {
+    int hasFile;
     FILE* file; 
     double instant; // Time Elapsed
     pid_t pid;        // Callee process ID
@@ -50,8 +50,6 @@ struct eventsInfo {
 struct eventsInfo eevee;
 
 int processRegister(enum events event);
-
-int toOctalMode(mode_t oldMask, char mode[], mode_t * mask);
 
 int ViewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
 
