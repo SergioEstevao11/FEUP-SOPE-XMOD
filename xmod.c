@@ -5,13 +5,13 @@ void sig_handler(int signal) { // :3
     processRegister(SIGNAL_RECV);
     if (signal == SIGINT) {
         char x;
-        printf("%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
+        printf("\n%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
         printf("Do you want to terminate the program? (y/n) ");
         scanf("%c", &x);
         if (x == 'y') {
             eevee.exitStatus = EXIT_SUCCESS;
-            processRegister(PROC_EXIT);
-            exit(EXIT_SUCCESS);
+			processRegister(PROC_EXIT);
+			exit(EXIT_SUCCESS);
         }
     }
     
@@ -35,6 +35,7 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
 
 int processRegister(enum events event) { // :3
     if(eevee.hasFile == 0){
+
         return 0;
     }
     eevee.file = fopen(getenv("LOG_FILENAME"), "a");
@@ -82,7 +83,7 @@ int processRegister(enum events event) { // :3
             break;
     }
 
-    printf("%s\n", message);
+    //printf("%s\n", message);
 
     fprintf(eevee.file,"%s",message);
     
@@ -115,21 +116,16 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
 
         
         snprintf(path, sizeof(path), "%s/%s", s, sd->d_name);
-        printf("%s\n", path);
 
         eevee.fileChanged = path;
         if (sd->d_type == DT_DIR){ 
 
             int id = fork();
             // chamar aqui pq processo começou :3
-            
             if (id == 0) {
                 eevee.arg[eevee.NumArgs-1] = path;
-                for(int c = 0; c < eevee.NumArgs; c++){
-                    printf("-> %s \n", eevee.arg[c]);
-                }
+
                 execvp("./xmod", eevee.arg);
-                //execvp("./xmod", argumentos da main)
                 return 0;
             }
             else wait(NULL);
@@ -141,7 +137,6 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
 
             if (stat(path, &ret) == -1) return 1;
             mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-            printf("%o\n", oldMode);
 
             if (isOctal == 1) {
                 if (toOctalMode(oldMode, newMode, &mask) != 0) exit(EXIT_FAILURE);   
@@ -226,7 +221,6 @@ int xmod(int argc, char* argv[]) {
         }
 
     
-        
         else if (strcmp(argv[counter], "-v") == 0) {
             option &= V_OPTION_MASK; // Tira o penultimo bit 
             option |= VC_OPTION_MASK; // Sinaliza q existe opçao -v/-c
@@ -246,7 +240,6 @@ int xmod(int argc, char* argv[]) {
 			return 1;
 		}
 	}
-
 
     counter++;
 
@@ -283,20 +276,24 @@ int xmod(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[], char* envp[]){
-    begin = clock();
-
     int fid;
-    char* token;
     char* filename = NULL;
 
     eevee.hasFile = 0;
     eevee.arg = argv;
     eevee.NumArgs = argc;
 
+    char time_str[1024];
+    struct timeval start;
 
-    if ((filename = getenv("LOG_FILENAME"))!= NULL) {
-        if (getpid() != 0) {
-            if ((eevee.file = fopen(filename,"w") )== NULL) {
+    int pid = getpid();
+
+    if ((filename = getenv("LOG_FILENAME"))!= NULL) { // nao deteta
+        if (getpgid(pid) == pid){
+            gettimeofday(&start,NULL);
+            snprintf(time_str, 1024, "BEGIN_TIME=%lu %lu", start.tv_sec, start.tv_usec);
+			putenv(time_str);
+			if ((eevee.file = fopen(filename,"w") )== NULL) {
                 perror("Unable to open/create file");
                 eevee.exitStatus = EXIT_FAILURE;
                 processRegister(PROC_EXIT);
@@ -307,11 +304,14 @@ int main(int argc, char* argv[], char* envp[]){
         eevee.hasFile = 1;
         eevee.fileChanged = argv[argc-1];
     }
-	/*
-    struct sigaction sig;
-    sig*/
 
-    //signal(NSIG, sig_handler);
+	struct sigaction sig, old_action;    
+    sigemptyset(&sig.sa_mask);          
+    sig.sa_flags = 0;                   
+    sig.sa_handler = sig_handler; 
+    sigaction(SIGINT, &sig, &old_action);
+
+    kill(getpid(), SIGINT);
     
     if (xmod(argc, argv) == 1){ 
         exit(EXIT_FAILURE);  

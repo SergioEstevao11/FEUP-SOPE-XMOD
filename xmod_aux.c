@@ -1,9 +1,16 @@
 #include "xmod_aux.h"
 
-double timeElapsed(){
-    //struct timeval midTime;
-    clock_t midTime = clock();
-    double time_spent =((double)(midTime-begin) / CLOCKS_PER_SEC)*1000;
+double timeElapsed() {
+    struct timeval time, begin;
+
+    gettimeofday(&time, NULL);
+    
+    char* start_str = getenv("BEGIN_TIME");
+    sscanf(start_str, "%lu %lu", &begin.tv_sec, &begin.tv_usec);
+   
+
+    double time_spent = (time.tv_sec + time.tv_usec / 1e6 - begin.tv_sec - begin.tv_usec / 1e6)*1e3;
+    
 	return time_spent;
 }
 
