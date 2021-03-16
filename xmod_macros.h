@@ -10,6 +10,9 @@
 #define OTHERS_MASK 0x1F8
 #define ALL_MASK 0x1FF
 
+//Signals
+#define ALL_SIGNALS  (SIGINT | SIGHUP | SIGQUIT | SIGUSR1 | SIGSEGV | SIGUSR2 | SIGPIPE | SIGTERM | SIGCHLD)
+
 //Read, Write and Execute Bits 
 #define R_BIT BIT(2)
 #define W_BIT BIT(1)

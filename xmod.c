@@ -1,21 +1,44 @@
 #include "xmod.h"
 
 void sig_handler(int signal) { // :3
+    char* x;
     eevee.signal = signal;
     processRegister(SIGNAL_RECV);
     if (signal == SIGINT) {
-        char x;
-        printf("\n%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
-        printf("Do you want to terminate the program? (y/n) ");
-        scanf("%c", &x);
-        if (x == 'y') {
-            eevee.exitStatus = EXIT_SUCCESS;
-			processRegister(PROC_EXIT);
-			exit(EXIT_SUCCESS);
+        // if(getpgid(getpid()) != getpid()){ // Faz com q todos menos o processo master parem quietos
+        //     kill(getpid(), SIGTSTP);
+        //     eevee.signal = SIGTSTP;
+        //     processRegister();
+        //     // Escrever o sinal no ficheiro de quem manda o sinal
+        //     // Enviar o sinal para o processo desejado
+        //     // Escrever o sinal no ficheiro de quem recebe o sinal (atraves do sig_handler)
+        // }
+        if(getpgid(getpid()) == getpid()) { // Se for o processo master
+            printf("\n%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
+
+            do {
+                printf("Do you want to terminate the program? (y/n) ");
+                scanf("%s", x);
+                while ((getchar()) != '\n'); 
+
+            } while ( sizeof(x) / sizeof(char) != 1 && x[0] != 'n' && x[0] != 'y' );
+            
+            if (x[0] == 'y') {
+                kill(0,SIGKILL);
+                eevee.signal = SIGKILL;
+                eevee.pid = getpid();
+                eevee.pidTarget = 0;
+                processRegister(SIGNAL_SENT);
+            }
+            else {
+                kill(0,SIGCONT);
+                eevee.signal = SIGCONT;
+                eevee.pid = getpid();
+                eevee.pidTarget = 0;
+                processRegister(SIGNAL_SENT);
+            }
         }
     }
-    
-
 }
 
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
@@ -34,8 +57,8 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
 }
 
 int processRegister(enum events event) { // :3
-    if(eevee.hasFile == 0){
-
+    if (eevee.hasFile == 0){
+        printf("Eevee has no file :(\n");
         return 0;
     }
     eevee.file = fopen(getenv("LOG_FILENAME"), "a");
@@ -153,14 +176,12 @@ int ViewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             
             switch(option) {
                 case V_OPTION:
-                    if (oldMode == mask) printf("mode of '%s/%s' retained as %o \n", s, sd->d_name, mask); //falta dar print do mode em "rwx"
-                    
-                    else printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
-
+                    if (oldMode == mask) printf("mode of '%s/%s' retained as 0%o \n", s, sd->d_name, mask); //falta dar print do mode em "rwx"                    
+                    else printf("mode of '%s/%s' changed from 0%o to 0%o\n", s, sd->d_name, oldMode, mask);
                     break;
 
                 case C_OPTION:
-                    if (oldMode != mask) printf("mode of '%s/%s' changed from %o to %o\n", s, sd->d_name, oldMode, mask);
+                    if (oldMode != mask) printf("mode of '%s/%s' changed from 0%o to 0%o\n", s, sd->d_name, oldMode, mask);
                     break;
                 
                 default:
@@ -275,6 +296,62 @@ int xmod(int argc, char* argv[]) {
 	return 0;
 }
 
+int signalSetup(){
+    struct sigaction sig, old_action;  
+
+    sigemptyset(&sig.sa_mask);          
+    sig.sa_flags = 0;                   
+    sig.sa_handler = sig_handler; 
+
+    if(sigaction(SIGINT, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGKILL, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGHUP, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGUSR1, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGQUIT, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGSEGV, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGUSR2, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGPIPE, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGALRM, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGTERM, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+    if(sigaction(SIGCHLD, &sig, &old_action)){
+        perror("Error in sigaction");
+        return 1;
+    }
+
+    return 0;
+
+}
+
 int main(int argc, char* argv[], char* envp[]){
     int fid;
     char* filename = NULL;
@@ -285,6 +362,8 @@ int main(int argc, char* argv[], char* envp[]){
 
     char time_str[1024];
     struct timeval start;
+
+    signalSetup();
 
     int pid = getpid();
 
@@ -305,17 +384,11 @@ int main(int argc, char* argv[], char* envp[]){
         eevee.fileChanged = argv[argc-1];
     }
 
-	struct sigaction sig, old_action;    
-    sigemptyset(&sig.sa_mask);          
-    sig.sa_flags = 0;                   
-    sig.sa_handler = sig_handler; 
-    sigaction(SIGINT, &sig, &old_action);
-
-    kill(getpid(), SIGINT);
     
     if (xmod(argc, argv) == 1){ 
         exit(EXIT_FAILURE);  
     }
+
 
     if (eevee.hasFile == 1) {
         eevee.exitStatus = EXIT_SUCCESS;
