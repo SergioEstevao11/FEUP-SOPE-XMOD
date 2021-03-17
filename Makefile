@@ -1,10 +1,18 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS =  -Wall -Wextra 
 
-all: xmod
+SDIR   = ./src
+OUTDIR  = ./out
 
-xmod: xmod.c xmod_aux.c
-	$(CC) -o xmod xmod.c xmod_aux.c
+EXEC =$(OUTDIR)xmod
 
-clean:
-	rm -f xmod
+all : $(EXEC)
+
+$(EXEC):  $(OUTDIR)/xmod.o $(OUTDIR)/xmod_aux.o
+	$(CC) $(CFLAGS) $(OUTDIR)/xmod.o $(OUTDIR)/xmod_aux.o -o xmod
+
+$(OUTDIR)/%.o: $(SDIR)/%.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+clean :
+	rm -f $(OUTDIR)/xmod.o $(OUTDIR)/xmod_aux.o

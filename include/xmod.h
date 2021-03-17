@@ -1,3 +1,6 @@
+#ifndef XMOD_H
+#define XMOD_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -52,3 +55,5 @@ int processRegister(pid_t pid, enum events event);
 int viewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
 
 int xmod(int argc, char* argv[]);
+
+#endif

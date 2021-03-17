@@ -1,4 +1,4 @@
-#include "xmod_aux.h"
+#include "../include/xmod_aux.h"
 
 double timeElapsed() {
     struct timeval time, begin;

@@ -1,3 +1,6 @@
+#ifndef XMOD_MACROS_H
+#define XMOD_MACROS_H
+
 #define BIT(x) (1 << x)
 
 #define MAX_BUF 1024
@@ -28,3 +31,5 @@
 #define VC_OPTION_MASK BIT(2)
 #define V_OPTION 2 
 #define C_OPTION 3
+
+#endif

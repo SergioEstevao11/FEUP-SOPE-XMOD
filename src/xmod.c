@@ -1,7 +1,7 @@
-#include "xmod.h"
+#include "../include/xmod.h"
 
 void sig_handler(int signal) { // :3
-    char *x = malloc(MAX_BUF);
+    char *input = malloc(MAX_BUF);
 
     eevee.signal = signal;
     processRegister(getpid(), SIGNAL_RECV);
@@ -11,16 +11,16 @@ void sig_handler(int signal) { // :3
 
             do {
                 printf("Do you want to terminate the program? (y/n) ");
-                scanf("%s", x);
+                scanf("%s", input);
                 while ((getchar()) != '\n'); 
 
-            } while ( sizeof(x) / sizeof(char) != 1 && x[0] != 'n' && x[0] != 'y' );
+            } while ( /*sizeof(x) / sizeof(char)*/ strlen(input) != 1 && input[0] != 'n' && input[0] != 'y' );
             
-            if (x[0] == 'y') {
+            if (input[0] == 'y') {
                 eevee.signal = SIGKILL;
                 eevee.pidTarget = 0;
                 processRegister(getpid(),SIGNAL_SENT);
-                free(x);
+                free(input);
                 kill(0,SIGKILL);
             }
             else {
@@ -37,7 +37,7 @@ void sig_handler(int signal) { // :3
             kill(getpid(), SIGTSTP);
         }
     }
-    free(x);
+    free(input);
 }
 
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
@@ -130,7 +130,6 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
         eevee.fileChanged = path;
         if (sd->d_type == DT_DIR){ 
             
-            char ** save = eevee.arg;
             eevee.arg[eevee.numArgs-1] = path;
             processRegister(getpid(),PROC_CREAT);
 
@@ -341,7 +340,7 @@ int signalSetup(){
 
 }
 
-int main(int argc, char* argv[], char* envp[]) {
+int main(int argc, char* argv[]) {
     char* filename = NULL;
 
     eevee.hasFile = 0;
