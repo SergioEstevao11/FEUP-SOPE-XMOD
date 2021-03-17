@@ -1,12 +1,12 @@
 #include "../include/xmod_aux.h"
 
-double timeElapsed() {
+double timeElapsed(void) {
     struct timeval time, begin;
 
     gettimeofday(&time, NULL);
     
     char* start_str = getenv("BEGIN_TIME");
-    sscanf(start_str, "%lu %lu", &begin.tv_sec, &begin.tv_usec);
+    sscanf(start_str, "%ld %ld", &begin.tv_sec, &begin.tv_usec);
    
 
     double time_spent = (time.tv_sec + time.tv_usec / 1e6 - begin.tv_sec - begin.tv_usec / 1e6)*1e3;
@@ -124,3 +124,4 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
 
     return 0;
 }
+

@@ -9,7 +9,7 @@
 
 #include "xmod_macros.h"
 
-double timeElapsed();
+double timeElapsed(void);
 
 void octalToVerb (mode_t perm, char * mode);
 

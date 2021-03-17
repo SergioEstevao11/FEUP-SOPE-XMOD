@@ -4,7 +4,7 @@ CFLAGS =  -Wall -Wextra
 SDIR   = ./src
 OUTDIR  = ./out
 
-EXEC =$(OUTDIR)xmod
+EXEC =xmod
 
 all : $(EXEC)
 
@@ -15,4 +15,4 @@ $(OUTDIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 clean :
-	rm -f $(OUTDIR)/xmod.o $(OUTDIR)/xmod_aux.o
+	rm -f $(OUTDIR)/xmod.o $(OUTDIR)/xmod_aux.o xmod
