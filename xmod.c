@@ -44,7 +44,7 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
     eevee.nftot++;
 
     if(chmod(file, newperm) != 0) return 1;
-    if (newperm != oldperm) eevee.nfmod++;    //não é suposto incrementar??
+    if (newperm != oldperm) eevee.nfmod++;  
     
     eevee.oldPerm = oldperm;
     eevee.newPerm = newperm;
@@ -139,9 +139,7 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
                 execvp("./xmod", eevee.arg);
                 return 0;
             } else {
-                pid_t pid = wait(&eevee.exitStatus);
-                processRegister(pid, PROC_EXIT);
-                eevee.arg = save;
+                wait(NULL);
             } 
         } else {
 
@@ -154,16 +152,9 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
                     
             else mask = strtol(newMode, NULL, 8);
 
-            if (chmod_handler(path, mask, oldMode) != 0) return 1;
+            if(sd->d_type != DT_LNK)
+                if (chmod_handler(path, mask, oldMode) != 0) return 1;
             
-            // chamar aqui pq permissões mudaram :3
-            
-            /*
-            char * old = "---------";
-            char * new = "---------";
-            octalToVerb(oldMode, old);
-            octalToVerb(mask, new);
-            */
             char old[10];
             char new[10];
 
@@ -172,7 +163,8 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             
             switch(option) {
                 case V_OPTION:
-                    if (oldMode == mask) printf("mode of '%s/%s' retained as 0%o (%s)\n", s, sd->d_name, mask, old); //falta dar print do mode em "rwx"                    
+                    if(sd->d_type == DT_LNK) printf("neither symbolic link '%s/'%s' nor referent has been changed\n",s,sd->d_name);
+                    else if (oldMode == mask) printf("mode of '%s/%s' retained as 0%o (%s)\n", s, sd->d_name, mask, old); //falta dar print do mode em "rwx"                    
                     else printf("mode of '%s/%s' changed from 0%o (%s) to 0%o (%s)\n", s, sd->d_name, oldMode, old, mask, new);
                     break;
 
@@ -372,7 +364,8 @@ int main(int argc, char* argv[], char* envp[]) {
 			putenv(time_str);                                                               // Cria uma env. var. chamada BEGIN_TIME q guarda o tempo existente em start 
                                                                         
 			if ((eevee.file = fopen(filename,"w") )== NULL) {                              // Tenta guardar em eevee.file o logFile, se n der:
-                perror("Unable to open/create log file"); 
+                perror("Unable to open/create log file");
+                eevee.exitStatus = EXIT_FAILURE; 
                 processRegister(getpid(),PROC_EXIT);                                   
                 exit(EXIT_FAILURE);
             }
@@ -385,16 +378,16 @@ int main(int argc, char* argv[], char* envp[]) {
     
     processRegister(getpid(),PROC_CREAT);
 
-    sleep(5);
+    //sleep(5);
     
     if (xmod(argc, argv) == 1){ 
+        eevee.exitStatus = EXIT_FAILURE;
+        processRegister(getpid(),PROC_EXIT);
         exit(EXIT_FAILURE);  
     }
 
-    if (getpgid(pid) == pid){
-        eevee.exitStatus = EXIT_SUCCESS;
-        processRegister(getpid(),PROC_EXIT);
-    }
-
+    eevee.exitStatus = EXIT_SUCCESS;
+    processRegister(getpid(),PROC_EXIT);
+    
     exit(EXIT_SUCCESS);
 }

@@ -17,7 +17,6 @@ double timeElapsed() {
 void octalToVerb (mode_t perm, char * mode) {
     char res[10];
     
-    printf("octalToVerb called\n");
     res[0] = (perm & S_IRUSR) ? 'r' : '-';
     res[1] = (perm & S_IWUSR) ? 'w' : '-'; 
     res[2] = (perm & S_IXUSR) ? 'x' : '-'; 
