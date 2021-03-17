@@ -1,5 +1,5 @@
-#ifndef XMOD_MACROS_H
-#define XMOD_MACROS_H
+#ifndef SOPE_MP1_INCLUDE_XMOD_MACROS_H_
+#define SOPE_MP1_INCLUDE_XMOD_MACROS_H_
 
 #define BIT(x) (1 << x)
 
@@ -32,4 +32,4 @@
 #define V_OPTION 2 
 #define C_OPTION 3
 
-#endif
+#endif //SOPE_MP1_INCLUDE_XMOD_MACROS_H_

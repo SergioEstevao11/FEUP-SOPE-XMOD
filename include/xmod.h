@@ -1,5 +1,5 @@
-#ifndef XMOD_H
-#define XMOD_H
+#ifndef SOPE_MP1_INCLUDE_XMOD_H_
+#define SOPE_MP1_INCLUDE_XMOD_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@
 
 #include <errno.h>
 
-#include "xmod_aux.h"
+#include "../include/xmod_aux.h"
 
 const char *signame[] = {"INVALID", "SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP", "SIGABRT", "SIGBUS", "SIGFPE", "SIGKILL", "SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM", "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT", "SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG", "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH", "SIGPOLL", "SIGPWR", "SIGSYS", NULL};
 
@@ -62,4 +62,4 @@ int viewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
 
 int xmod(int argc, char* argv[]);
 
-#endif
+#endif  // SOPE_MP1_INCLUDE_XMOD_H_

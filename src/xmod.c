@@ -76,15 +76,13 @@ void sig_handler(int signal){
                 eevee.pidTarget = 0;
                 processRegister(getpid(),SIGNAL_SENT);
                 kill(0,SIGKILL);
-            }
-            else {
+            } else {
                 eevee.signal = SIGCONT;
                 eevee.pidTarget = 0;
                 processRegister(getpid(),SIGNAL_SENT);
                 kill(0,SIGCONT);
             }
-        }
-        else {
+        } else {
             eevee.signal = SIGTSTP;
             eevee.pidTarget = 0;
             processRegister(getpid(),SIGNAL_SENT);
@@ -263,9 +261,7 @@ int xmod(int argc, char* argv[]) {
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             break;
-        }
-
-        else if ( argv[counter][0] == 'u' || argv[counter][0] == 'g' || argv[counter][0] == 'o' || argv[counter][0] == 'a'){
+        } else if ( argv[counter][0] == 'u' || argv[counter][0] == 'g' || argv[counter][0] == 'o' || argv[counter][0] == 'a'){
             isOctal = 1;
 
             if (stat(argv[counter+1], &ret) < 0) return 1; // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
@@ -278,24 +274,21 @@ int xmod(int argc, char* argv[]) {
             }
             
             break;
-        }
+        } else if (strcmp(argv[counter], "-v") == 0) {
 
-    
-        else if (strcmp(argv[counter], "-v") == 0) {
             option &= V_OPTION_MASK; // Tira o penultimo bit 
             option |= VC_OPTION_MASK; // Sinaliza q existe opçao -v/-c
-        }
 
-        
+        } else if (strcmp(argv[counter], "-c") == 0) {
 
-        else if (strcmp(argv[counter], "-c") == 0) {
             option |= C_OPTION_MASK; // Mete o penultimo bit
             option |= VC_OPTION_MASK; // Sinaliza q existe opção -v/-c
-        }
 
-        else if (strcmp(argv[counter], "-R") == 0) option |= R_OPTION_MASK; // Mete o ultimo bit
+        } else if (strcmp(argv[counter], "-R") == 0) {
 
-        else {
+            option |= R_OPTION_MASK; // Mete o ultimo bit
+
+        } else {
             perror("Invalid argument after options");
             eevee.exitStatus = EXIT_FAILURE;
             processRegister(getpid(),PROC_EXIT);
@@ -375,7 +368,7 @@ int main(int argc, char* argv[]) {
     
     processRegister(getpid(),PROC_CREAT);
 
-    sleep(5);
+    //sleep(5);
     
     if (xmod(argc, argv) == 1){ 
         eevee.exitStatus = EXIT_FAILURE;

@@ -28,7 +28,7 @@ void octalToVerb (mode_t perm, char * mode) {
     res[8] = (perm & S_IXOTH) ? 'x' : '-'; 
 
     res[9] = '\0';
-    strcpy(mode,res);
+    snprintf(mode, sizeof(char)*10, "%s", res);
 }
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
