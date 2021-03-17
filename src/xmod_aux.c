@@ -3,6 +3,9 @@
 double timeElapsed(void) {
     struct timeval time, begin;
 
+    begin.tv_sec = 0;
+    begin.tv_usec = 0;
+
     gettimeofday(&time, NULL);
     
     char* start_str = getenv("BEGIN_TIME");

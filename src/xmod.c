@@ -109,28 +109,27 @@ int processRegister(pid_t pid, enum events event) {
             for (int c = 0; c < eevee.numArgs; c++){
                 messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s ", eevee.arg[c]);
             }
-            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "\n");
+            snprintf(message+messageSize, MAX_BUF-messageSize, "\n");
             break;
         
         case PROC_EXIT:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "PROC_EXIT ; ");
-            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d\n", eevee.exitStatus);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%d\n", eevee.exitStatus);
             break;
 
         case SIGNAL_RECV:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_RECV ; ");
-            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s\n", signame[eevee.signal]);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s\n", signame[eevee.signal]);
             break;
             
         case SIGNAL_SENT:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_SENT ; ");
-            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s : %d\n", signame[eevee.signal], eevee.pidTarget);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : %d\n", signame[eevee.signal], eevee.pidTarget);
             break;
 
         case FILE_MODF:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "FILE_MODF ; ");
-            messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s : 0%o : 0%o\n", eevee.fileChanged, eevee.oldPerm, eevee.newPerm);
-            break;;
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : 0%o : 0%o\n", eevee.fileChanged, eevee.oldPerm, eevee.newPerm);
             break;
             
         default:
@@ -148,7 +147,10 @@ int processRegister(pid_t pid, enum events event) {
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
     eevee.nftot++;
 
-    if(chmod(file, newperm) != 0) return 1;
+    if(chmod(file, newperm) != 0) {
+        perror("Error in chmod");
+        return 1;
+    }
     if (newperm != oldperm) eevee.nfmod++;  
     
     eevee.oldPerm = oldperm;
@@ -188,24 +190,35 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             int id = fork();
             if (id == 0) {
                 execvp("./xmod", eevee.arg);
+                closedir(dir);
                 return 0;
             } else {
                 wait(NULL);
             } 
         } else {
 
-            if (stat(path, &ret) == -1) return 1;
+            if (stat(path, &ret) == -1){
+                closedir(dir);
+                return 1;
+            }
             mode_t oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             if (isOctal == 1) {
-                if (toOctalMode(oldMode, newMode, &mask) != 0) return 1;
+                if (toOctalMode(oldMode, newMode, &mask) != 0){
+                    closedir(dir);
+                    return 1;
+                }
             } 
                     
             else mask = strtol(newMode, NULL, 8);
 
-            if(sd->d_type != DT_LNK)
-                if (chmod_handler(path, mask, oldMode) != 0) return 1;
-            
+            if(sd->d_type != DT_LNK){
+                if (chmod_handler(path, mask, oldMode) != 0) {
+                    closedir(dir);
+                    return 1;
+                }
+            }
+
             char old[10];
             char new[10];
 
@@ -236,8 +249,8 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
 int xmod(int argc, char* argv[]) {
 
     int option = NO_OPTION;
-    mode_t oldMode;
-    mode_t mask;
+    mode_t oldMode = 0;
+    mode_t mask = 0;
     int counter = 1;
     int isOctal = 0;
     struct stat ret;
@@ -245,8 +258,6 @@ int xmod(int argc, char* argv[]) {
 
     if (argc < MIN_ARGS || argc > MAX_ARGS) {
         perror("Incorrect number of arguments");
-        eevee.exitStatus = EXIT_FAILURE;
-        processRegister(getpid(),PROC_EXIT);
         return 1;
     }
 
@@ -255,21 +266,28 @@ int xmod(int argc, char* argv[]) {
         
         if ((mask = strtol(argv[counter], NULL, 8)) != 0) {
             
-            if (argv[counter][0] != '0') return 1;
+            if (argv[counter][0] != '0'){
+                perror("No leading zero in octal mode number");
+                return 1;
+            }
 
-            if (stat(argv[counter+1], &ret) < 0) return 1; // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
+            if (stat(argv[counter+1], &ret) < 0){
+                perror("File not found");
+                return 1;
+            } 
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             break;
         } else if ( argv[counter][0] == 'u' || argv[counter][0] == 'g' || argv[counter][0] == 'o' || argv[counter][0] == 'a'){
             isOctal = 1;
 
-            if (stat(argv[counter+1], &ret) < 0) return 1; // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
+            if (stat(argv[counter+1], &ret) < 0) {
+                perror("File not found");
+                return 1;
+            } // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             if (toOctalMode(oldMode, argv[counter], &mask) != 0) {
-                eevee.exitStatus = EXIT_FAILURE;
-                processRegister(getpid(),PROC_EXIT);
                 return 1;
             }
             
@@ -290,8 +308,6 @@ int xmod(int argc, char* argv[]) {
 
         } else {
             perror("Invalid argument after options");
-            eevee.exitStatus = EXIT_FAILURE;
-            processRegister(getpid(),PROC_EXIT);
 			return 1;
 		}
 	}
