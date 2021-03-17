@@ -8,6 +8,6 @@
 
 double timeElapsed();
 
-const char* octalToVerb (mode_t perm);
+void octalToVerb (mode_t perm, char * mode);
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t *mask);

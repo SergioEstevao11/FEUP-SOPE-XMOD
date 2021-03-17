@@ -14,8 +14,8 @@ double timeElapsed() {
 	return time_spent;
 }
 
-const char* octalToVerb (mode_t perm) {
-    char* res;
+void octalToVerb (mode_t perm, char * mode) {
+    char res[10];
     
     printf("octalToVerb called\n");
     res[0] = (perm & S_IRUSR) ? 'r' : '-';
@@ -29,8 +29,7 @@ const char* octalToVerb (mode_t perm) {
     res[8] = (perm & S_IXOTH) ? 'x' : '-'; 
 
     res[9] = '\0';
-    printf("octalToVerb returned\n");
-    return res;
+    strcpy(mode,res);
 }
 
 int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){

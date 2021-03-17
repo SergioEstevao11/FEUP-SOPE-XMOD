@@ -42,12 +42,9 @@ void sig_handler(int signal) { // :3
 
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
     eevee.nftot++;
-    if(chmod(file, newperm) != 0){
-        return 1;
-    }
-    if (newperm != oldperm){
-        eevee.nfmod;
-    }
+
+    if(chmod(file, newperm) != 0) return 1;
+    if (newperm != oldperm) eevee.nfmod++;    //não é suposto incrementar??
     
     eevee.oldPerm = oldperm;
     eevee.newPerm = newperm;
@@ -167,9 +164,11 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             octalToVerb(oldMode, old);
             octalToVerb(mask, new);
             */
+            char old[10];
+            char new[10];
 
-            const char* old = octalToVerb(oldMode);
-            const char* new = octalToVerb(mask);
+            octalToVerb(oldMode,old);
+            octalToVerb(mask,new);
             
             switch(option) {
                 case V_OPTION:
@@ -186,7 +185,6 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
             }
         }
     }
-    
     
     closedir(dir);
     return 0;
@@ -262,25 +260,15 @@ int xmod(int argc, char* argv[]) {
 
     counter++;
     
-    if (chmod_handler(argv[counter], mask, oldMode) != 0) {
-		return 1;
-	}
+    if (chmod_handler(argv[counter], mask, oldMode) != 0) return 1;
     
     int copy_option = option >> 1; 
 
-    /*
-    char * old = "---------";
-    char * new = "---------";
-    octalToVerb(oldMode, old);
-    octalToVerb(mask, new);
-    */
+    char old[10];
+    char new[10];
 
-    const char* old = octalToVerb(oldMode);
-    const char* new = octalToVerb(mask);
-    printf("old = %s\n", old);
-    printf("oldMode = %o\n", oldMode);
-    printf("new = %s\n", new);
-    printf("mask = %o\n", mask);
+    octalToVerb(oldMode,old);
+    octalToVerb(mask,new);
 
     switch(copy_option){
             case V_OPTION:
@@ -397,7 +385,7 @@ int main(int argc, char* argv[], char* envp[]) {
     
     processRegister(getpid(),PROC_CREAT);
 
-    //sleep(5);
+    sleep(5);
     
     if (xmod(argc, argv) == 1){ 
         exit(EXIT_FAILURE);  
@@ -407,5 +395,6 @@ int main(int argc, char* argv[], char* envp[]) {
         eevee.exitStatus = EXIT_SUCCESS;
         processRegister(getpid(),PROC_EXIT);
     }
+
     exit(EXIT_SUCCESS);
 }
