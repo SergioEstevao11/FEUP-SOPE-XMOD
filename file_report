@@ -1,0 +1,3 @@
+0.317015 ; 19996 ; PROC_CREAT ; ./xmod -v 0775 ficheiro.txt 
+0.439085 ; 19996 ; FILE_MODF ; ficheiro.txt : 0777 : 0775
+0.574984 ; 19996 ; PROC_EXIT ; 0

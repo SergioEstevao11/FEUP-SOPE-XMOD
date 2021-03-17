@@ -6,7 +6,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
 
@@ -28,16 +27,15 @@ enum events {
 };
 
 struct eventsInfo {
-    int hasFile;
     FILE* file; 
+    int hasFile;
     double instant; // Time Elapsed
-    pid_t pid;        // Callee process ID
     pid_t pidTarget; 
 
     //info of the events
     //PRO_CREATE
-    char ** arg;
-    int NumArgs;
+    char** arg;
+    int numArgs;
 	int nftot; // Total files checked 
 	int nfmod; // Files modified
 	int exitStatus;
@@ -49,8 +47,8 @@ struct eventsInfo {
 
 struct eventsInfo eevee;
 
-int processRegister(enum events event);
+int processRegister(pid_t pid, enum events event);
 
-int ViewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
+int viewDirectoryRecursive(char s[], char newMode[], int Octal, int option);
 
 int xmod(int argc, char* argv[]);

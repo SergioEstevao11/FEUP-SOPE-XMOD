@@ -1,5 +1,7 @@
 #define BIT(x) (1 << x)
 
+#define MAX_BUF 1024
+
 //Xmod arguments
 #define MAX_ARGS 6
 #define MIN_ARGS 3
