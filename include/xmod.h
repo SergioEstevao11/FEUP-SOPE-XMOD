@@ -36,10 +36,11 @@ enum events {
 // Struct that stores all the relevant info about different events
 struct eventsInfo {
 
-    FILE* file; // File to writen the event info
-    int hasFile; // Signals if the environment variable LOG_FILENAME is defined: 1 if it is, 0 if it's not
+    FILE* file; // File to write the event info
+    int hasFile; // Signals if the environment variable LOG_FILENAME is defined: 1 if it is, 0 otherwise
+    char * invokedFile; // Name of the file/directory that originated the process
 
-    double instant; // Time Elapsed since the beggining of the execution
+    double instant; // Time elapsed since the beggining of the execution
 
     // PROC_CREATE
     char** arg; // Stores all the arguments that create the process
@@ -49,7 +50,7 @@ struct eventsInfo {
 	int exitStatus; // Exit status of the process
 
     //SIGINT
-	int nftot; // Total number of files found until register 
+	int nftot; // Total number of files found until register
 	int nfmod; // Number of files modified
 
     //SIGNAL_RECEIVED and SIGNAL_SENT
@@ -65,6 +66,12 @@ struct eventsInfo {
 
 //Global variable that holds the struct eventsInfo
 struct eventsInfo infoReg;
+
+// ---------------------------
+//
+// xmod.c functions
+//
+// ---------------------------
 
 /** 
  * @brief Redirects most signals to sig_handler using sigaction
@@ -86,8 +93,7 @@ void sig_handler(int signal);
  * @param pid Proccess Identifier
  * @param event Type of event to register
  * 
- * @return Returns 0 if the event is written to the file succesfully, 1 if the environment variable 
- * LOG_FILENAME is not defined (doesn't write in file)
+ * @return Returns 0 if the event is written to the file succesfully, 1 if the environment variable LOG_FILENAME is not defined (doesn't write in file)
  */
 int processRegister(pid_t pid, enum events event);
 
@@ -112,16 +118,15 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm);
  *
  * @return Returns 0 if no errors occurred, 1 otherwise
  */
-int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option);
+int directoryRecursive(char s[], char newMode[], int isOctal, int option);
 
 /**
- * @brief Main xmod function that parses the command line arguments and 
- * changes the permissions of the files, directories and symbolic links referenced
+ * @brief Main xmod function that parses the command line arguments and changes the permissions of the files, directories and symbolic links referenced.
  * 
- * @param argc Number of command line arguments 
- * @param argv Array of strings with the command line arguments
+ * @param argc Number of command line arguments. 
+ * @param argv Array of strings with the command line arguments.
  *
- * @return Returns 0 if no errors occurred, 1 otherwise
+ * @return Returns 0 if no errors occurred, 1 otherwise.
  */
 int xmod(int argc, char* argv[]);
 
