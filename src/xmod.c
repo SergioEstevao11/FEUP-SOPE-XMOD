@@ -26,11 +26,6 @@ int signalSetup(void){
         perror("Error in sigaction, SIGQUIT");
         return 1;
     }
-    /*if (sigaction(SIGSEGV, &sig, &old_action) == -1){
-        perror("Error in sigaction, SIGSEGV");
-        return 1;
-    }
-    */
     if (sigaction(SIGUSR2, &sig, &old_action) == -1){
         perror("Error in sigaction, SIGUSR2");
         return 1;
@@ -168,7 +163,7 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
     
     
     if ((dir = opendir(s)) == NULL){
-        printf("Error at opening directory");
+        perror("Error at opening directory");
         return 1;
     }
 
@@ -272,7 +267,7 @@ int xmod(int argc, char* argv[]) {
             }
 
             if (stat(argv[counter+1], &ret) < 0){
-                perror("File not found");
+                fprintf(stderr, "Cannot access '%s': %s\n",argv[counter+1],strerror(errno));
                 return 1;
             } 
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
@@ -282,9 +277,9 @@ int xmod(int argc, char* argv[]) {
             isOctal = 1;
 
             if (stat(argv[counter+1], &ret) < 0) {
-                perror("File not found");
+                fprintf(stderr, "Cannot access '%s': %s\n",argv[counter+1],strerror(errno));
                 return 1;
-            } // Possivelmente vai ser preciso fazer um for aqui para alterar varios ficheiros
+            }
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
             if (toOctalMode(oldMode, argv[counter], &mask) != 0) {
