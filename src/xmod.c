@@ -10,39 +10,39 @@ int signalSetup(void){
     sig.sa_flags = SA_RESTART;
     sig.sa_handler = sigHandler;
 
-    if (sigaction(SIGINT, &sig, &old_action) == -1){
+    if (sigaction(SIGINT, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGINT");
         return 1;
     }
-    if (sigaction(SIGHUP, &sig, &old_action) == -1){
+    if (sigaction(SIGHUP, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGHUP");
         return 1;
     }
-    if (sigaction(SIGUSR1, &sig, &old_action) == -1){
+    if (sigaction(SIGUSR1, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGUSR1");
         return 1;
     }
-    if (sigaction(SIGQUIT, &sig, &old_action) == -1){
+    if (sigaction(SIGQUIT, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGQUIT");
         return 1;
     }
-    if (sigaction(SIGUSR2, &sig, &old_action) == -1){
+    if (sigaction(SIGUSR2, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGUSR2");
         return 1;
     }
-    if (sigaction(SIGPIPE, &sig, &old_action) == -1){
+    if (sigaction(SIGPIPE, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGPIPE");
         return 1;
     }
-    if (sigaction(SIGALRM, &sig, &old_action) == -1){
+    if (sigaction(SIGALRM, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGALRM");
         return 1;
     }
-    if (sigaction(SIGTERM, &sig, &old_action) == -1){
+    if (sigaction(SIGTERM, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGTERM");
         return 1;
     }
-    if (sigaction(SIGCHLD, &sig, &old_action) == -1){
+    if (sigaction(SIGCHLD, &sig, &old_action) == -1) {
         perror("Error in sigaction, SIGCHLD");
         return 1;
     }
