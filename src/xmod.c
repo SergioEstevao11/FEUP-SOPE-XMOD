@@ -214,8 +214,10 @@ int directoryRecursive(char s[], char perm[], int isOctal, int option) {
                     closedir(dir);
                     return 1;
                 }
-            } else newMode = strtol(perm, NULL, 8);  // Converts perm to octal mode
-
+            } else {
+                newMode = strtol(perm, NULL, 8);  // Converts perm to octal mode
+            }
+            
             if(sd->d_type != DT_LNK){   // Checks if file is a symbolic link
                 if (chmod_handler(path, newMode, oldMode) != 0) {
                     closedir(dir);
