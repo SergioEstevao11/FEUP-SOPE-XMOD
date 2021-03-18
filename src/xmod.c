@@ -50,14 +50,14 @@ int signalSetup(void){
     return 0;
 }
 
-void sig_handler(int signal){ 
-    char input[MAX_BUF];
+void sig_handler(int signal) { 
+    char input[MAX_BUF]; // Stores the user input
 
-    infoReg.signal = signal;
-    processRegister(getpid(), SIGNAL_RECV);
+    infoReg.signal = signal; // Stores the signal in the struct
+    processRegister(getpid(), SIGNAL_RECV); 
     
-    if (signal == SIGINT) {
-        if (getpgid(getpid()) == getpid()) { // Se for o processo master
+    if (signal == SIGINT) { // Only SIGINT is treated
+        if (getpgid(getpid()) == getpid()) { // 
             printf("\n%d ; %s ; %d ; %d\n", getpid(), infoReg.fileChanged, infoReg.nftot, infoReg.nfmod);
 
             do {
@@ -87,7 +87,8 @@ void sig_handler(int signal){
 }
 
 int processRegister(pid_t pid, enum events event) {
-    if (infoReg.hasFile == 0) return 1;
+    //
+    if (infoReg.hasFile == 0) return 1; 
 
     infoReg.file = fopen(getenv("LOG_FILENAME"), "a");
     char *message = malloc(MAX_BUF);
@@ -244,13 +245,13 @@ int xmod(int argc, char* argv[]) {
 
     int option = NO_OPTION;
     mode_t oldMode = 0;
-    mode_t mask = 0;
+    mode_t newMode = 0;
     int counter = 1;
     int isOctal = 0;
     struct stat ret;
 
 
-    if (argc < MIN_ARGS || argc > MAX_ARGS) {
+    if (argc < MIN_ARGS) {
         perror("Incorrect number of arguments");
         return 1;
     }
@@ -258,7 +259,7 @@ int xmod(int argc, char* argv[]) {
 
     for (;;counter++) {
         
-        if ((mask = strtol(argv[counter], NULL, 8)) != 0) {
+        if ((newMode = strtol(argv[counter], NULL, 8)) != 0) {
             
             if (argv[counter][0] != '0'){
                 perror("No leading zero in octal mode number");
@@ -281,7 +282,7 @@ int xmod(int argc, char* argv[]) {
             }
             oldMode = ret.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
 
-            if (toOctalMode(oldMode, argv[counter], &mask) != 0) {
+            if (toOctalMode(oldMode, argv[counter], &newMode) != 0) {
                 return 1;
             }
             
@@ -308,7 +309,7 @@ int xmod(int argc, char* argv[]) {
 
     counter++;
     
-    if (chmod_handler(argv[counter], mask, oldMode) != 0) return 1;
+    if (chmod_handler(argv[counter], newMode, oldMode) != 0) return 1;
     
     int copy_option = option >> 1; 
 
@@ -316,18 +317,18 @@ int xmod(int argc, char* argv[]) {
     char new[10];
 
     octalToVerb(oldMode,old);
-    octalToVerb(mask,new);
+    octalToVerb(newMode,new);
 
     switch(copy_option){
             case V_OPTION:
-                if (oldMode == mask) printf("mode of '%s' retained as 0%o (%s) \n", argv[counter], mask, old); //falta dar print do mode em "rwx"
+                if (oldMode == newMode) printf("mode of '%s' retained as 0%o (%s) \n", argv[counter], newMode, old); //falta dar print do mode em "rwx"
                 
-                else printf("mode of '%s' changed from 0%o (%s) to 0%o (%s)\n", argv[counter], oldMode, old, mask, new);
+                else printf("mode of '%s' changed from 0%o (%s) to 0%o (%s)\n", argv[counter], oldMode, old, newMode, new);
 
                 break;
 
             case C_OPTION:
-                if (oldMode != mask) printf("mode of '%s' changed from 0%o (%s) to 0%o (%s)\n", argv[counter], oldMode, old, mask, new); //falta dar print do mode em "rwx"
+                if (oldMode != newMode) printf("mode of '%s' changed from 0%o (%s) to 0%o (%s)\n", argv[counter], oldMode, old, newMode, new); //falta dar print do mode em "rwx"
                 break;
             
             default:
@@ -378,7 +379,7 @@ int main(int argc, char* argv[]) {
     
     processRegister(getpid(),PROC_CREAT);
 
-    //sleep(5);
+    sleep(5);
     
     if (xmod(argc, argv) == 1){ 
         infoReg.exitStatus = EXIT_FAILURE;

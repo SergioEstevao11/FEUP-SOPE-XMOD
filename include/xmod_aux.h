@@ -9,10 +9,31 @@
 
 #include "../include/xmod_macros.h"
 
+/**
+ * @brief Function that returns the time elapsed since the start of the execution of the program
+ * 
+ * @return Time elapsed
+ */
 double timeElapsed(void);
 
-void octalToVerb (mode_t perm, char * mode);
+/**
+ * @brief Function that converts an octal mode permission to a symbolic string 
+ * 
+ * @param perm Permition to be converted
+ * @param newPerm Converted permission 
+ * 
+ */
+void octalToVerb (mode_t perm, char * newPerm);
 
-int toOctalMode(mode_t oldMask, char mode[], mode_t *mask);
+/**
+ * @brief Function that converts a "non-octal mode" permission to an octal mode permission
+ * 
+ * @param oldPerm File's previous permissions
+ * @param mode Non-octal mode to be converted
+ * @param newPerm File's new permissions to be applied 
+ * 
+ * @return 0 if no errors occurred, 1 otherwise
+ */
+int toOctalMode(mode_t oldPerm, char mode[], mode_t *newPerm);
 
 #endif //SOPE_MP1_INCLUDE_XMOD_AUX_H_

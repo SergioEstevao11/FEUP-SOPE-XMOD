@@ -17,7 +17,7 @@ double timeElapsed(void) {
 	return time_spent;
 }
 
-void octalToVerb (mode_t perm, char * mode) {
+void octalToVerb (mode_t perm, char * newPerm) {
     char res[10];
     
     res[0] = (perm & S_IRUSR) ? 'r' : '-';
@@ -31,10 +31,10 @@ void octalToVerb (mode_t perm, char * mode) {
     res[8] = (perm & S_IXOTH) ? 'x' : '-'; 
 
     res[9] = '\0';
-    snprintf(mode, sizeof(char)*10, "%s", res);
+    snprintf(newPerm, sizeof(char)*10, "%s", res);
 }
 
-int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
+int toOctalMode(mode_t oldPerm, char mode[], mode_t *newPerm){
     mode_t newMask = 0x0;
     int rFlag = 0, wFlag = 0, xFlag = 0;
 
@@ -98,21 +98,21 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
 
     switch (mode[1]) {
         case '+':
-            newMask |= oldMask;
+            newMask |= oldPerm;
             break;
         case '-': 
-            newMask = ((~newMask) & oldMask);
+            newMask = ((~newMask) & oldPerm);
             break;
         case '=':
             switch (mode[0]) {
                 case 'u':
-                    newMask = ((oldMask & USER_MASK) | newMask);
+                    newMask = ((oldPerm & USER_MASK) | newMask);
                     break;
                 case 'g':
-                    newMask = ((oldMask & GROUP_MASK) | newMask);
+                    newMask = ((oldPerm & GROUP_MASK) | newMask);
                     break;
                 case 'o':
-                    newMask = ((oldMask & OTHERS_MASK) | newMask);
+                    newMask = ((oldPerm & OTHERS_MASK) | newMask);
                     break;
                 default:
                     break;
@@ -123,7 +123,7 @@ int toOctalMode(mode_t oldMask, char mode[], mode_t *mask){
             return 1;
     }
 
-    *mask = newMask;
+    *newPerm = newMask;
 
     return 0;
 }
