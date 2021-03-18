@@ -8,7 +8,7 @@ int signalSetup(void){
 
     sig.sa_mask = smask;  
     sig.sa_flags = SA_RESTART;
-    sig.sa_handler = sig_handler;
+    sig.sa_handler = sigHandler;
 
     if (sigaction(SIGINT, &sig, &old_action) == -1){
         perror("Error in sigaction, SIGINT");
@@ -50,7 +50,7 @@ int signalSetup(void){
     return 0;
 }
 
-void sig_handler(int signal) { 
+void sigHandler(int signal) { 
     char input[MAX_BUF]; // Stores the user input
 
     infoReg.signal = signal; // Stores the signal in the struct
@@ -144,7 +144,7 @@ int processRegister(pid_t pid, enum events event) {
 }
 
 
-int chmod_handler(char *file, mode_t newperm, mode_t oldperm) {  
+int invokeChmod(char *file, mode_t newperm, mode_t oldperm) {  
     infoReg.nftot++;
 
     if(chmod(file, newperm) != 0) {
@@ -162,12 +162,6 @@ int chmod_handler(char *file, mode_t newperm, mode_t oldperm) {
 
 
 int directoryRecursive(char s[], char perm[], int isOctal, int option) {
-    // ./xmod 0555 file.x      ./xmod u=rx file.x
-    //       \/                     \/
-    // perm  = "0555"           perm = "u=rx"
-    // isOctal = 1              isOctal = 0
-    
-
 
     DIR *dir;
     struct dirent *sd;
@@ -219,7 +213,7 @@ int directoryRecursive(char s[], char perm[], int isOctal, int option) {
             }
             
             if(sd->d_type != DT_LNK){   // Checks if file is a symbolic link
-                if (chmod_handler(path, newMode, oldMode) != 0) {
+                if (invokeChmod(path, newMode, oldMode) != 0) {
                     closedir(dir);
                     return 1;
                 }
@@ -323,7 +317,7 @@ int xmod(int argc, char* argv[]) {
     // Another increase is needed to access the file argument
     counter++;
     
-    if (chmod_handler(argv[counter], newMode, oldMode) != 0) return 1;
+    if (invokeChmod(argv[counter], newMode, oldMode) != 0) return 1;
     
     // Creates a option copy from original without last bit, since it stored R_OPTION_MASK, which is irrelevant to verbose/changes mode checks 
     int optionCopy = option >> 1; 

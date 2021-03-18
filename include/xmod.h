@@ -85,7 +85,7 @@ int signalSetup(void);
  * 
  * @param signal Signal received
 */
-void sig_handler(int signal);
+void sigHandler(int signal);
 
 /**
  * @brief Writes to log file an event from a specific process
@@ -106,7 +106,7 @@ int processRegister(pid_t pid, enum events event);
  * 
  * @return Returns 0 if no errors occurred, 1 otherwise
  */
-int chmod_handler(char *file, mode_t newperm, mode_t oldperm);
+int invokeChmod(char *file, mode_t newperm, mode_t oldperm);
 
 /**
  * @brief Function that handles the recursive option "-R" where a directory tree is processed
