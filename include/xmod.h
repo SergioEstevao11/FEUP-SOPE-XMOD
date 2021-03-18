@@ -48,7 +48,7 @@ struct eventsInfo {
     mode_t newPerm;
 };
 
-struct eventsInfo eevee;
+struct eventsInfo infoReg;
 
 void sig_handler(int signal);
 

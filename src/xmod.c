@@ -53,12 +53,12 @@ int signalSetup(void){
 void sig_handler(int signal){ 
     char input[MAX_BUF];
 
-    eevee.signal = signal;
+    infoReg.signal = signal;
     processRegister(getpid(), SIGNAL_RECV);
     
     if (signal == SIGINT) {
         if (getpgid(getpid()) == getpid()) { // Se for o processo master
-            printf("\n%d ; %s ; %d ; %d\n", getpid(), eevee.fileChanged, eevee.nftot, eevee.nfmod);
+            printf("\n%d ; %s ; %d ; %d\n", getpid(), infoReg.fileChanged, infoReg.nftot, infoReg.nfmod);
 
             do {
                 printf("Do you want to terminate the program? (y/n) ");
@@ -67,19 +67,19 @@ void sig_handler(int signal){
 
             } while ( strcmp(input, "y") != 0 && strcmp(input, "n") != 0 );
             if (input[0] == 'y') {
-                eevee.signal = SIGKILL;
-                eevee.pidTarget = 0;
+                infoReg.signal = SIGKILL;
+                infoReg.pidTarget = 0;
                 processRegister(getpid(),SIGNAL_SENT);
                 kill(0,SIGKILL);
             } else {
-                eevee.signal = SIGCONT;
-                eevee.pidTarget = 0;
+                infoReg.signal = SIGCONT;
+                infoReg.pidTarget = 0;
                 processRegister(getpid(),SIGNAL_SENT);
                 kill(0,SIGCONT);
             }
         } else {
-            eevee.signal = SIGTSTP;
-            eevee.pidTarget = 0;
+            infoReg.signal = SIGTSTP;
+            infoReg.pidTarget = 0;
             processRegister(getpid(),SIGNAL_SENT);
             kill(getpid(), SIGTSTP);
         }
@@ -87,69 +87,69 @@ void sig_handler(int signal){
 }
 
 int processRegister(pid_t pid, enum events event) {
-    if (eevee.hasFile == 0) return 1;
+    if (infoReg.hasFile == 0) return 1;
 
-    eevee.file = fopen(getenv("LOG_FILENAME"), "a");
+    infoReg.file = fopen(getenv("LOG_FILENAME"), "a");
     char *message = malloc(MAX_BUF);
     int messageSize = 0;
 
-    eevee.instant = timeElapsed();
+    infoReg.instant = timeElapsed();
     
-    messageSize += snprintf(message, MAX_BUF, "%f ; ", eevee.instant);
+    messageSize += snprintf(message, MAX_BUF, "%f ; ", infoReg.instant);
     messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%d ; ", pid);
     
     switch (event) {
         case PROC_CREAT:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "PROC_CREAT ; ");
-            for (int c = 0; c < eevee.numArgs; c++){
-                messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s ", eevee.arg[c]);
+            for (int c = 0; c < infoReg.numArgs; c++){
+                messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "%s ", infoReg.arg[c]);
             }
             snprintf(message+messageSize, MAX_BUF-messageSize, "\n");
             break;
         
         case PROC_EXIT:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "PROC_EXIT ; ");
-            snprintf(message+messageSize, MAX_BUF-messageSize, "%d\n", eevee.exitStatus);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%d\n", infoReg.exitStatus);
             break;
 
         case SIGNAL_RECV:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_RECV ; ");
-            snprintf(message+messageSize, MAX_BUF-messageSize, "%s\n", signame[eevee.signal]);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s\n", signame[infoReg.signal]);
             break;
             
         case SIGNAL_SENT:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "SIGNAL_SENT ; ");
-            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : %d\n", signame[eevee.signal], eevee.pidTarget);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : %d\n", signame[infoReg.signal], infoReg.pidTarget);
             break;
 
         case FILE_MODF:
             messageSize += snprintf(message+messageSize, MAX_BUF-messageSize, "FILE_MODF ; ");
-            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : 0%o : 0%o\n", eevee.fileChanged, eevee.oldPerm, eevee.newPerm);
+            snprintf(message+messageSize, MAX_BUF-messageSize, "%s : 0%o : 0%o\n", infoReg.fileChanged, infoReg.oldPerm, infoReg.newPerm);
             break;
             
         default:
             break;
     }
 
-    fprintf(eevee.file,"%s",message);
+    fprintf(infoReg.file,"%s",message);
     
 	free(message);
-    fclose(eevee.file);
+    fclose(infoReg.file);
     return 0;
 }
 
 
 int chmod_handler(char *file, mode_t newperm, mode_t oldperm){
-    eevee.nftot++;
+    infoReg.nftot++;
 
     if(chmod(file, newperm) != 0) {
         perror("Error in chmod");
         return 1;
     }
-    if (newperm != oldperm) eevee.nfmod++;  
+    if (newperm != oldperm) infoReg.nfmod++;  
     
-    eevee.oldPerm = oldperm;
-    eevee.newPerm = newperm;
+    infoReg.oldPerm = oldperm;
+    infoReg.newPerm = newperm;
     processRegister(getpid(),FILE_MODF);
     return 0;
 }
@@ -168,7 +168,6 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
     }
 
     while ( (sd=readdir(dir)) != NULL ) {
-        //printf("%s\n", sd->d_name);
         struct stat ret;
         mode_t mask;
         
@@ -176,15 +175,15 @@ int viewDirectoryRecursive(char s[], char newMode[], int isOctal, int option){
         
         snprintf(path, sizeof(path), "%s/%s", s, sd->d_name);
 
-        eevee.fileChanged = path;
+        infoReg.fileChanged = path;
         if (sd->d_type == DT_DIR){ 
             
-            eevee.arg[eevee.numArgs-1] = path;
+            infoReg.arg[infoReg.numArgs-1] = path;
             processRegister(getpid(),PROC_CREAT);
 
             int id = fork();
             if (id == 0) {
-                execvp("./xmod", eevee.arg);
+                execvp("./xmod", infoReg.arg);
                 closedir(dir);
                 return 0;
             } else {
@@ -345,9 +344,9 @@ int xmod(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
     char* filename = NULL;
 
-    eevee.hasFile = 0;
-    eevee.numArgs = argc;
-    eevee.arg = argv;
+    infoReg.hasFile = 0;
+    infoReg.numArgs = argc;
+    infoReg.arg = argv;
 
     char time_str[MAX_BUF];
     struct timeval start;
@@ -364,17 +363,17 @@ int main(int argc, char* argv[]) {
             snprintf(time_str, MAX_BUF, "BEGIN_TIME=%lu %lu", start.tv_sec, start.tv_usec);
 			putenv(time_str);                                                               // Cria uma env. var. chamada BEGIN_TIME q guarda o tempo existente em start 
                                                                         
-			if ((eevee.file = fopen(filename,"w") )== NULL) {                              // Tenta guardar em eevee.file o logFile, se n der:
+			if ((infoReg.file = fopen(filename,"w") )== NULL) {                              // Tenta guardar em infoReg.file o logFile, se n der:
                 perror("Unable to open/create log file");
-                eevee.exitStatus = EXIT_FAILURE; 
+                infoReg.exitStatus = EXIT_FAILURE; 
                 processRegister(getpid(),PROC_EXIT);                                   
                 exit(EXIT_FAILURE);
             }
-            fclose(eevee.file);
+            fclose(infoReg.file);
         }
 
-        eevee.hasFile = 1;
-        eevee.fileChanged = argv[argc-1];
+        infoReg.hasFile = 1;
+        infoReg.fileChanged = argv[argc-1];
     }
     
     processRegister(getpid(),PROC_CREAT);
@@ -382,12 +381,12 @@ int main(int argc, char* argv[]) {
     //sleep(5);
     
     if (xmod(argc, argv) == 1){ 
-        eevee.exitStatus = EXIT_FAILURE;
+        infoReg.exitStatus = EXIT_FAILURE;
         processRegister(getpid(),PROC_EXIT);
         exit(EXIT_FAILURE);  
     }
 
-    eevee.exitStatus = EXIT_SUCCESS;
+    infoReg.exitStatus = EXIT_SUCCESS;
     processRegister(getpid(),PROC_EXIT);
     
     exit(EXIT_SUCCESS);
