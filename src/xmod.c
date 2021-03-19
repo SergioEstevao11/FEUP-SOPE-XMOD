@@ -62,8 +62,8 @@ void sigHandler(int signal) {
         if (getpgid(getpid()) == getpid()) { // Parent process is the only one who checks if the user wants to continue
             
             // Called usleep twice to guarantee that the question prompt will appear last on the console
-            usleep(10000); // First usleep may be interrupted because a signal SIGCHLD may be received from its child process 
-            usleep(10000);  // If the first usleep is interruped, guarantees that the question prompt will appear last on the console
+            sleep(1); // First usleep may be interrupted because a signal SIGCHLD may be received from its child process 
+            sleep(1);  // If the first usleep is interruped, guarantees that the question prompt will appear last on the console
 
             do {
                 printf("Do you want to terminate the program? (y/n) ");
