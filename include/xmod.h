@@ -98,7 +98,7 @@ void sigHandler(int signal);
 int processRegister(pid_t pid, enum events event);
 
 /**
- * @brief Function that handles the project's main loop
+ * @brief Function that calls chmod and interprets its result
  * 
  * @param file Target file to change permissions
  * @param newperm File's new permissions to be applied
