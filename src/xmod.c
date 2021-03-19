@@ -57,14 +57,20 @@ void sigHandler(int signal) {
     processRegister(getpid(), SIGNAL_RECV); 
     
     if (signal == SIGINT) { // Only SIGINT is treated
-        printf("\n%d ; %s ; %d ; %d\n", getpid(), infoReg.invokedFile, infoReg.nftot, infoReg.nfmod);
+        printf("%d ; %s ; %d ; %d\n", getpid(), infoReg.invokedFile, infoReg.nftot, infoReg.nfmod);
 
         if (getpgid(getpid()) == getpid()) { // Parent process is the only one who checks if the user wants to continue
+            
+            // Called sleep twice to guarantee that the question prompt will appear last on the console
+            sleep(1); // First sleep may be interrupted because a signal SIGCHLD may be received from its child process 
+            sleep(1);  // If the first sleep is interruped, guarantees that the question prompt will appear last on the console
 
             do {
                 printf("Do you want to terminate the program? (y/n) ");
                 scanf("%s", input);
             } while ( strcmp(input, "y") != 0 && strcmp(input, "n") != 0 );
+            
+            printf("\n");
 
             if (input[0] == 'y') {
                 infoReg.signal = SIGKILL;
@@ -355,6 +361,8 @@ int main(int argc, char* argv[]) {
     char* fileName = NULL;
 
     infoReg.hasFile = 0;
+    infoReg.nftot = 0;
+    infoReg.nfmod = 0;
     infoReg.numArgs = argc;
     infoReg.arg = argv;
     infoReg.invokedFile = argv[argc-1];
@@ -389,6 +397,7 @@ int main(int argc, char* argv[]) {
     
     processRegister(getpid(),PROC_CREAT);
 
+    sleep(5);
     
     if (xmod(argc, argv) == 1){ 
         infoReg.exitStatus = EXIT_FAILURE;
