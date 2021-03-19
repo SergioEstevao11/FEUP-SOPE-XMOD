@@ -396,8 +396,6 @@ int main(int argc, char* argv[]) {
     }
     
     processRegister(getpid(),PROC_CREAT);
-    
-    sleep(2);
 
     if (xmod(argc, argv) == 1){ 
         infoReg.exitStatus = EXIT_FAILURE;
